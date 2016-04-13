@@ -84,13 +84,28 @@ class SW_XMPP(sleekxmpp.ClientXMPP):
         data='''%s''' % msg['pubsub_event']
         tree=ET.fromstring(data)
 
-        #print "pubsub Item: %s" % data
-        print "Code: %s" % tree[0][0][0].text
-        try:
-            result = self['xep_0060'].purge(pubsubDomain, nodeName)
-            #print('Purged all items from node %s on %s' % (nodeName,pubsubDomain))
-        except:
-            print('Could not purge items from node %s on %s' % (nodeName,pubsubDomain) )
+        # Avoid to display the same item more than once
+        # It started to happens and I don't know why
+        # Maybe a XMPP server PubSub implementation bug?
+        # Needs investigation
+        id=tree[0][0].get("id")
+
+        if id in IDs:
+
+            idx=1
+        else:
+            idx=0
+            IDs.append(id)
+
+        if idx==0:
+
+           #print "pubsub Item: %s" % data
+            print "Code: %s" % tree[0][0][0].text
+            try:
+                result = self['xep_0060'].purge(pubsubDomain, nodeName)
+                #print('Purged all items from node %s on %s' % (nodeName,pubsubDomain))
+            except:
+                print('Could not purge items from node %s on %s' % (nodeName,pubsubDomain) )
 
 print "Connecting as %s" % xmppUser
 
