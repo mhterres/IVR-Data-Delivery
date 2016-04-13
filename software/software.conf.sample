@@ -1,5 +1,5 @@
 [general]
-xmppUser=user@yourJabberDomain/software_exten
+xmppUser=user@yourJabberDomain/extennumber
 xmppSecret=secret
 pubsubDomain=yourPubSubDomain
 nodeName=yourNodeName
