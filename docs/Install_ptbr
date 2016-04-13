@@ -14,7 +14,7 @@ Asterisk
 
 Acesse o diretório IVR-Data-Delivery e rode os seguintes comandos:
 
-cp -rp audios /var/lib/asterisk/sounds/pt_br/poc
+cp -rp audios /var/lib/asterisk/sounds/pt_BR/poc
 cp -rp asterisk/agi-bin /var/lib/asterisk/agi-bin/poc
 cp asterisk/etc/extensions_poc.conf /etc/asterisk
 cp asterisk/etc/extensions_ivrpoc.ael /etc/asterisk

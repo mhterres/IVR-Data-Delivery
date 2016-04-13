@@ -1,4 +1,4 @@
-crm/crm.conf
+software/software.conf
 queue/queueapp.conf
 asterisk/agi-bin/db.conf
 *.pyc
