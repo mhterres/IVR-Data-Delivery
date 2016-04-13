@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# getCustomer.py
+# Get Customer based on informed code
+#
+# Marcelo H. Terres <mhterres@mundoopensource.com.br>
+# 2016-09-12
+#
+
+import os
+import re
+import sys
+import psycopg2
+import psycopg2.extras
+import sys
+import ConfigParser
+
+from asterisk import agi
+
+
+try:
+
+  code=sys.argv[1]
+except:
+
+  print "You need to inform code..."
+  sys.exit(1)
+
+configFile='%s/db.conf' % os.path.dirname(sys.argv[0])
+ 
+try: 
+ 
+  configuration = ConfigParser.RawConfigParser() 
+  configuration.read(configFile) 
+ 
+  db_host=configuration.get('general','host') 
+  db_name=configuration.get('general','name') 
+  db_user=configuration.get('general','user') 
+  db_secret=configuration.get('general','secret') 
+ 
+except: 
+ 
+  print "Config file %s not found." % configFile 
+  sys.exit(1) 
+
+dsn = 'dbname=%s host=%s user=%s password=%s' % (db_name, db_host, db_user,db_secret)
+
+conn = psycopg2.connect(dsn)
+curs = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+agi = agi.AGI()
+
+sql = "SELECT id,name FROM customer WHERE code = '%s';" % code
+curs.execute(sql)
+
+if not curs.rowcount:
+	agi.verbose("Can't find customer for code %s" % code)
+	agi.set_variable("CUSTOMER_ID", "")
+	agi.set_variable("CUSTOMER_NAME", "")
+	sysexit(1)
+
+row = curs.fetchone()
+agi.verbose('CUSTOMER_ID %s' % row['id'])
+agi.verbose('CUSTOMER_NAME %s' % row['name'])
+agi.set_variable('CUSTOMER_ID',row['id'])
+agi.set_variable('CUSTOMER_NAME',row['name'])
+

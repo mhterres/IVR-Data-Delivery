@@ -1,0 +1,10 @@
+# Requirements
+
+* Servidor XMPP com suporte pubsub  (testado com ejabberd)
+* Entradas SRV para seu domínio jabber configuradas no seu DNS
+* Asterisk 13 com suporte a ARI ativado
+* Asterisk integrado com o servidor XMPP (arquivo de config de exemplo em asterisk/etc)
+* Servidor PostgreSQL
+* biblioteca python sleekxmpp instalada (https://github.com/fritzy/SleekXMPP)
+* biblioteca python pyst/pyst2 instalada (https://github.com/rdegges/pyst2)
+* biblioteca python psycopg2 instalada

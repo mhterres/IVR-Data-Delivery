@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# queueMembers
+# Get members of custom queue support
+#
+# Marcelo H. Terres <mhterres@mundoopensource.com.br>
+# 2016-09-11
+#
+
+import sys
+import os
+import re
+import sys
+import psycopg2
+import psycopg2.extras
+import sys
+import ConfigParser
+
+from asterisk import agi
+
+try:
+
+  queue=sys.argv[1]
+except:
+
+  print "You need to inform queue..."
+  sys.exit(1)
+
+configFile='%s/db.conf' % os.path.dirname(sys.argv[0])
+
+try:
+
+  configuration = ConfigParser.RawConfigParser()
+  configuration.read(configFile)
+
+  db_host=configuration.get('general','host')
+  db_name=configuration.get('general','name')
+  db_user=configuration.get('general','user')
+  db_secret=configuration.get('general','secret')
+
+except:
+
+  print "Config file %s not found." % configFile
+  sys.exit(1)
+
+
+agi = agi.AGI()
+
+dsn = 'dbname=%s host=%s user=%s password=%s' % (db_name, db_host, db_user,db_secret)
+
+conn = psycopg2.connect(dsn)
+curs = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+sql = "SELECT id FROM queue WHERE name = '%s';" % queue
+curs.execute(sql)
+
+if not curs.rowcount:
+  agi.verbose("Can't find queue %s" % queue)
+  agi.set_variable("Logon", "False")
+  sys.exit(1)
+
+queue_id = curs.fetchone()['id']
+
+sql = "SELECT sip.extension AS exten FROM queue_sip,sip WHERE queue_id = %s AND sip.id=queue_sip.sip_id AND queue_sip.logged=True;" % queue_id
+curs.execute(sql)
+
+members=""
+
+if curs.rowcount>0:
+
+  row = curs.fetchone()
+
+  while row is not None:
+
+
+    if len(members.strip())==0:
+
+      members=row['exten']
+    else:
+      members="%s,%s" % (members,row['exten'])
+
+    row = curs.fetchone()
+
+conn.commit()
+conn.close()
+
+agi.set_variable("queue_members", members)
+

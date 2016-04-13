@@ -1,0 +1,22 @@
+[queue]
+id=1
+name=support
+strategy=leastrecent
+timeout=60
+ringtimeperexten=15
+extension=0000
+
+[xmpp]
+xmppUser=user@yourJabberDomain/queue //same account used on agis scripts (createPubSubNode and deletePubSubNode)
+xmppSecret=secret
+pubsubDomain=yourPubSubDomain
+
+[ari]
+user=yourAriUser
+secret=yourAriSecret
+
+[db]
+name=ivrdatadelivery
+host=yourPostgreSQLServer
+user=ivrdatadelivery
+secret=secret

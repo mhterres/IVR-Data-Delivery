@@ -1,0 +1,79 @@
+Integrando URAs Asterisk com softwares de atendimento ao cliente através de XMPP
+********************************************************************************
+
+Prova de conceito
+by Marcelo Hartmann Terres <mhterres@mundoopensource.com.br>
+Versão 0.1 - 2016/04/13
+
+Objetivo
+********
+
+O objetivo deste projeto é demonstrar as possibilidade de integração entre softwares diversos (SAC, Ouvidoria, HelpDesk, etc...) com URAs Asterisk.
+
+Um dos grandes problemas no atuais serviços telefônicos de atendimento ao cliente é a total falta de integração entre a URA e o sistema utilizado pelo atendente. Infelizmente ainda é muito comum você ligar para um SAC e, após ter se identificado na URA, ter que passar novamente seus dados para o atendente para que ele/ela possa lhe identificar no sistema.
+
+Em função disso, resolvi desenvolver este pequeno projeto que demonstra como é possível implementar uma integração inteligente entre a URA e o sistema de atendimento, tornando o processo mais rápido e ágil para o cliente e também para o atendente.
+
+Alguns exemplos onde este projeto pode ser utilizado:
+
+* Você ligou para o seu banco, informou seu CPF na URA, e quando o atendente começar a falar com você ele já está com seu histórico de atendimento disponível.
+* Você ligou para uma ouvidoria, informou o código do protocolo ao qual deseja atendimento, e quando o atendente falar com você ele já está acessando o atendimento a qual se refere o protocolo devidamente aberto, com todas as informações disponíveis.
+
+Softwares
+*********
+
+O projeto depende de vários softwares distintos:
+
+* Asterisk - o Asterisk provê a URA e interage via uma app Stasis (usando ARI) com o servidor XMPP para publicação dos dados do cliente. Além disso, ele fala diretamente com o servidor XMPP para anunciar a entrada de chamadas dos clientes para os atendentes logados na fila.
+* Servidor XMPP - o servidor XMPP, além de ser utilizado internamente para a comunicação entre os colaboradores, é utilizado pelo Asterisk para anunciar novas chamadas de suporte entrantes na fila aos membros logados na fila. Ele também é o middleware usado para permitir a comunicação entre o Asterisk e o software de atendimento ao cliente que fará uso dos dados obtidos na URA.
+* O software de atendimento ao cliente: nesta PoC, o software de atendimento ao cliente é simulado por um script (software.py), que assina o nó do ramal no servidor XMPP e processa os itens publicados neste (no caso, exibe o código e o nome do cliente). Do ponto de vista de uma aplicação real, o comportamento esperado seria que assim que o usuário logasse no sistema, o software determinasse qual seu nó no serviço pubsub do servidor XMPP (no caso desta PoC, o nome do nó é formado por "Extension" + número do ramal - o número do ramal poderia ficar no cadastro do usuário no sistema). De posse deste dados, o software deveria se autenticar no servidor XMPP (usando, por exemplo, a mesma conta que é utilizada pelo servidor Asterisk) e assinar o respectivo nó, tratando as informações que fossem publicadas neste (ex: usando o código do protocolo para acessar a informação do mesmo).
+* PostgreSQL: o PostgreSQL é usado para armazenar os dados dos ramais (número, nome e seu vínculo com a conta XMPP). Ele também é usado para armazenar o cadastro de clientes (usado na URA) e para controlar o comportamento da fila do suporte (queueapp.py).
+
+Funcionamento do ponto de vista do cliente
+******************************************
+
+O cliente liga para o "número da empresa" e é atendido por uma URA.
+
+A URA possui 3 opções: 
+* disque 1 para suporte
+* disque 2 para vendas - direciona a chamada para o ramal 2000
+* aguarde para ser atendido - direciona a chamada para o ramal 3000
+
+Quando o cliente selecionar a opção 1, será solicitado o código do cliente, de 4 dígitos.
+
+O código informado será consultado, via agi, no banco de dados e, caso seja inválido, o cliente será informado.
+
+Se o código for válido, o Asterisk verificará quais são os ramais que atualmente estão logados na fila support. De posse desta informações, ele enviará uma mensagem XMPP para cada um dos atendentes, informando que tem um ligação do cliente X (devidamente identificado) na fila.
+
+O Asterisk passa então a chamada para a aplicação Stasis (queueapp.py), junto com os dados do cliente. A aplicação identifica então qual o ramal de destino da chamada (usando uma política de fila leastrecent) e publica no nó do serviço PubSub deste ramal os dados do cliente enviados pelo Asterisk (neste momento, a software de atendimento ao cliente - na PoC, representado pelo script software.py) recebe tais dados e processa-os). A chamada é então direcionada para o ramal, para atendimento.
+
+Funcionamento do ponto de vista do atendente
+********************************************
+
+Do ponto de vista do atendente, a primeira coisa que o mesmo deve fazer é logar na fila support. Isso pode ser feito discando para *56466* (*LOGON*). Após alguns instantes o atendente será informado que logou na fila.
+
+De forma similar, o atendente também precisa deslogar da fila quando não for atender mais chamadas da mesma. O código para deslogar é *564633* (*LOGOFF*).
+
+Ao entrar nova chamada na fila, o atendente logado na fila irá receber uma mensagem no seu cliente XMPP, informando o nome do cliente. A chamada então será entregue para um dos atendentes logados na fila e que esteja livre.
+
+Supondo que o sistema esteja devidamente integrado, este poderia, por exemplo, abrir (ou questionar se o atendente deseja abrir) o histórico de atendimentos do cliente em questão.
+
+
+Utilizando o projeto
+********************
+
+Antes de mais nada siga os passos do documento de instalação, existente neste diretório. 
+
+Depois de devidamente instalado, é preciso acessar o diretório queue e colocar a app queueapp.py em execução. Sugiro que você deixe a aplicação aberto, rodando em foreground, para acompanhar seus passos.
+
+Também é preciso acessar o diretório software e iniciar o script software.py, deixando-o rodando também em foreground para acompanhar seus passos.
+
+Vamos então partir da premissa que você vai usar os ramais 1000,2000 e 3000 e que as chamadas para a URA virão do ramal 2000 (você pode modificar isso como desejar, mas faça as devidas alterações no queueapp.py). Além disso, vamos supor que estes ramais estejam respectivamente vinculados as contas XMPP user1@seudominiojabber, user1@seudominiojabber e user3@seudominiojabber.
+
+Vamos supor também que o ramal 1000 irá ser o atendente da fila (lembre-se que você pode ter vários atendentes).
+
+Logue-se então no seu cliente SIP com o ramal 1000 e no seu cliente XMPP com a conta respectiva vinculada a este ramal.
+
+Logue-se também em outro cliente SIP com o ramal 2000, para efetuar as chamadas para a URA.
+
+Disque para a URA (0000) e selecione a opção 1. Informe o código do cliente (existem 2 clientes na base modelo, Company 1 - código 1111 e Company 2 - código 2) e acompanhe o que acontece nas aplicações (queueapp.py, software.py e rasterisk). Além dos logs nestas aplicações, você deverá receber uma mensagem XMPP do Asterisk informando da chamada do cliente e também a ligação no ramal 1000.

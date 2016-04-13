@@ -1,0 +1,5 @@
+[general]
+xmppUser=user@yourJabberDomain/software_exten //same account used on agis scripts (createPubSubNode and deletePubSubNode)
+xmppSecret=secret
+pubsubDomain=yourPubSubDomain
+nodeName=yourNodeName

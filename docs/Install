@@ -1,0 +1,70 @@
+Installation
+************
+
+This document supposes the following scenario:
+
+* All requirements are ok (docs/Requeriments)
+* Asterisk was compiled from source
+* Asterisk is using the english language
+
+If you have a different scenario, you will need to change some directories in following operations.
+
+Asterisk
+********
+
+Access the directory IVR-Data-Delivery and run these commands:
+
+cp -rp audios /var/lib/asterisk/sounds/pt_br/poc
+cp -rp asterisk/agi-bin /var/lib/asterisk/agi-bin/poc
+cp asterisk/etc/extensions_poc.conf /etc/asterisk
+cp asterisk/etc/extensions_ivrpoc.ael /etc/asterisk
+cp asterisk/etc/pubsub.conf /etc/asterisk
+cp /var/lib/asterisk/agi-bin/poc/db.conf.sample /var/lib/asterisk/agi-bin/poc/db.conf
+cp software/software.conf.sample software/software.conf
+cp queue/queueapp.conf.sample queue/queueapp.conf
+echo asterisk/etc/extensions.ael.sample >> /etc/asterisk/extensions.ael
+
+Add in the beginning of file /etc/asterisk/extensions.conf this line:
+
+#include "/etc/asterisk/extensions_poc.conf"
+
+Add to context [global] in file /etc/asterisk/extensions.conf this line:
+
+XMPPDOMAIN_POC=yourJabberDomain
+
+Change the XMPPDOMAIN_POC value to your jabber domain.
+
+
+Add to your extensions context (file /etc/asterisk/extensions.conf) this line:
+
+include => poc
+
+XMPP
+****
+
+Create xmpp accounts that will be linked with Asterisk extensions.
+
+PostgreSQL
+**********
+
+Create an user and database with name ivrdatadelivery and import the .sql files in database.
+
+su - postgres
+createuser -P -S -D -R ivrdatadelivery
+createdb -O ivrdatadelivery ivrdatadelivery
+exit
+cat db/dbpgsql.sql | psql -U ivrdatadelivery -W ivrdatadelivery -h 127.0.0.1
+cat db/initdata.sql | psql -U ivrdatadelivery -W ivrdatadelivery -h 127.0.0.1
+
+Edit sip table and add the extensions. Don't forget to link with XMPP accounts.
+
+
+Final configurations
+********************
+
+Edit file /etc/asterisk/pubsub.conf and change the parameters as needed
+Edit file /var/lib/asterisk/agi-bin/poc/db.conf and change the parameters as needed
+Edit file software/software.conf and change the parameters as needed
+Edit file queue/queueapp.conf and change the parameters as needed
+
+

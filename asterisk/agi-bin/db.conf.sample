@@ -1,0 +1,5 @@
+[general]
+host=yourPostgreSQLServer
+name=dbname 
+user=dbuser
+secret=dbsecret

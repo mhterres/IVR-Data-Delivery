@@ -1,0 +1,165 @@
+context ivrpoc {
+
+  s => {
+
+    goto ivrpoc|ivr|background;
+  };
+
+  ivr => {
+
+		Set(QUEUENAME=support);
+    x=0;
+
+    Answer;
+    Wait(1);
+
+    background:
+    Background(poc/welcome);
+
+    backgroundoptions:
+
+    Background(poc/ivr);
+    WaitExten(3);
+
+		Dial(PJSIP/3000,50,tT);
+  };
+
+  1 => {
+    // Support
+		goto ivrsupport|support|1;
+  };
+
+  2 => {
+    // Sales
+    Dial(PJSIP/2000,50,tT);
+  };
+
+  i => {
+
+    x=${x}+1;
+    Playback(poc/invalid_option);
+    goto ivrpoc|ivr|backgroundoptions;
+  };
+};
+
+context ivrsupport {
+
+  s => {
+
+    goto ivrsupport|support|1;
+  };
+
+  support => {
+
+    NoOp(Support selected);
+
+    code:
+    y=0;
+
+    entercode:
+    y=${y}+1;
+    Read(code,poc/inform_code,4);
+
+    NoOp(Code ${code});
+
+		agi(poc/getCustomer.agi,${code});
+
+		NoOp("${CUSTOMER_ID}");
+
+		if ("${CUSTOMER_ID}" = "")
+		{
+	      if (${y}=3)
+        {
+           wait(1);
+           Playback(poc/invalid_code);
+           Playback(poc/bye);
+           Playback(congestion);
+           Hangup;
+        }
+
+        wait(1);
+        Playback(poc/invalid_code);
+        Playback(poc/try_again);
+        goto ivrsupport|support|entercode;
+		}
+		else
+		{
+        goto support|${CUSTOMER_NAME}|1;
+		}
+  };
+};
+
+context support {
+
+  h => {
+    Hangup;
+  }
+
+  _. => {
+    NoOP (Customer ${CUSTOMER_NAME});
+
+    Set(JABBERMSG="Support: Customer ${CUSTOMER_NAME}");
+
+    &XMPPSupportMSG(${JABBERMSG});
+
+    wait(1);
+    Stasis(queueapp,${CUSTOMER_ID}|${CUSTOMER_NAME});
+  };
+};
+
+context macro-XMPPSupportMSG {
+
+    s => {
+
+        &XMPPSupportMSG(${ARG1});
+    };
+};
+
+macro XMPPSupportMSG(JABBERMSG) {
+
+    x=0;
+		
+		agi(poc/queueMembersCount.agi,${QUEUENAME});	 // return number of queue active members in members_count variable
+
+    if (${members_count} > 0) {
+
+			agi(poc/queueMembers.agi,${QUEUENAME});	 // return active members of queue in queue_members variable
+
+        NoOP(${members_count} members in queue support - ${queue_members});
+
+        while (${x} < ${members_count}) {
+
+            x = ${x} + 1;
+
+            if (${members_count} = 1) {
+
+                Set(member=${queue_members});
+            }
+            else {
+
+                Set(member=${CUT(queue_members,\,,${x})});
+            }
+
+            agi(poc/getjid.agi,${member});	// get jid of extension in jid variable
+            Set(user=${CUT(jid,"@",1)});
+            NoOP(Sending message to extension ${member} - jabber id ${jid});
+            &SendJabberIvr(${user},${JABBERMSG});
+        }
+    }
+};
+
+context macro-SendJabberIvr {
+
+   s => {
+
+        &SendJabberIvr(${ARG1},${ARG2});
+    };
+};
+
+macro SendJabberIvr(DST, MSG) {
+
+    NoOp (Sending message to ${DST});
+
+    JabberSend(xmppserver,${DST}@${XMPPDOMAIN_POC},${MSG});
+};
+

@@ -1,0 +1,66 @@
+Instação da PoC
+***************
+
+Este documento supõe que exista o seguinte cenário:
+
+* Os requerimentos indicados (docs/Requerimentos_ptbr) estejam sendo atendidos
+* O Asterisk tenha sido compilado dos fontes
+* O Asterisk esteja configurado para uso da linguagem pt_br
+
+Se o cenário for diferente, você precisará alterar alguns diretórios nos comandos seguintes
+
+Asterisk
+********
+
+Acesse o diretório IVR-Data-Delivery e rode os seguintes comandos:
+
+cp -rp audios /var/lib/asterisk/sounds/pt_br/poc
+cp -rp asterisk/agi-bin /var/lib/asterisk/agi-bin/poc
+cp asterisk/etc/extensions_poc.conf /etc/asterisk
+cp asterisk/etc/extensions_ivrpoc.ael /etc/asterisk
+cp asterisk/etc/pubsub.conf /etc/asterisk
+cp /var/lib/asterisk/agi-bin/poc/db.conf.sample /var/lib/asterisk/agi-bin/poc/db.conf
+cp software/software.conf.sample software/software.conf
+cp queue/queueapp.conf.sample queue/queueapp.conf
+echo asterisk/etc/extensions.ael.sample >> /etc/asterisk/extensions.ael
+
+Adicione ao início do arquivo /etc/asterisk/extensions.conf a seguinte linha:
+
+#include "/etc/asterisk/extensions_poc.conf"
+
+Adicione ao contexto [global] do arquivo /etc/asterisk/extensions.conf a seguinte linha:
+
+XMPPDOMAIN_POC=yourJabberDomain
+
+Altere o XMPPDOMAIN_POC para seu domínio jabber.
+
+Adicione ao contexto de seus ramais (arquivo /etc/asterisk/extensions.conf) a seguinte linha:
+
+include => poc
+
+XMPP
+****
+
+Crie os usuários que serão vinculados aos ramais de teste.
+
+PostgreSQL
+**********
+Crie um usuário e um banco de dados com o nome ivrdatadelivery e carregue os arquivos .sql existentes no diretório db. 
+
+su - postgres
+createuser -P -S -D -R ivrdatadelivery
+createdb -O ivrdatadelivery ivrdatadelivery
+exit
+cat db/dbpgsql.sql | psql -U ivrdatadelivery -W ivrdatadelivery -h 127.0.0.1
+cat db/initdata.sql | psql -U ivrdatadelivery -W ivrdatadelivery -h 127.0.0.1
+
+Edite a tabela sip e adicione os ramais necessários vinculados as contas XMPP. 
+
+Configurações finais
+********************
+
+Edite o arquivo /etc/asterisk/pubsub.conf e altere os dados necessários
+Edite o arquivo /var/lib/asterisk/agi-bin/poc/db.conf e altere os dados necessários
+Edite o arquivo software/software.conf e altere os dados necessários
+Edite o arquivo queue/queueapp.conf e altere os dados necessários
+

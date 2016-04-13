@@ -1,0 +1,28 @@
+Why do I need XMPP?
+*******************
+Why don't you do a direct connection between Asterisk and the "other software"?
+*******************************************************************************
+
+Answering both questions: the choice of using XMPP (PubSub) as a middleware between Asterisk and the customer service software has many reasons:
+
+* With this approach, the information exchange between Asterisk and the "other software" don't need to be modified to each case, making the solution as generic as possible.
+* For security reasons, the Asterisk server don't need to have direct access to the "other software's" infrastructure (and vice versa).
+* The "other software" can be hosted in another place or network that is not acessible to Asterisk (and vice versa).
+* XMPP (and PubSub) is a mature protocol and you can find XMPP libraries in many major languages (Python, Java, Perl, etc...).
+* Besides, with PubSub, you can implement the solution in your software with just a few lines of code (see software/software.py) and with little efforts.
+* All servers can be in diffent places or networks. You just need to ensure that Asterisk and the "other software" can communicate with the XMPP server.
+
+Do I need to use PostgreSQL?
+****************************
+
+No, you can use your preferred DBMS (MySQL, MsSql, Oracle, SQLite, etc...). I just opted for PostgreSQL because I use it in a daily basis. But attention: if you decide to use a different DBMS you'll need to edit the agis and the scripts to connect in this new DBMS.
+
+What XMPP server should I use?
+******************************
+
+You can use any XMPP server that supports XEP-0060 (PubSub). I chose ejabberd, but you can use Openfire, MongooseIM, Tigase and Prosody, for example.
+
+What kind of software I can integrate with this solution?
+********************************************************
+
+You can integrate any software that can make use of informations obtained through IVRs, like customer service software, HelpDesk, CRM and ombudsman softwares.

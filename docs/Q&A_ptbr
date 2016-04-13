@@ -1,0 +1,28 @@
+Porque preciso usar o XMPP?
+***************************
+Não posso fazer uma comunicação direta entre o Asterisk e a aplicação?
+**********************************************************************
+
+Respondendo ambas perguntas: a escolha da utilização do XMPP (PubSub) como um intermediário entre o Asterisk e o software de atendimento ao cliente tem várias razões:
+
+* Com esta abordagem, a troca de informações entre o Asterisk e o software não precisa ser tratada caso a caso, fazendo com que a solução seja o mais genérica possível.
+* Por questões de segurança, o servidor Asterisk não precisa ter acesso ao software que roda a aplicação (e vice-versa).
+* A aplicação pode rodar em um local inacessível diretamente ao servidor Asterisk (e vice-versa).
+* O protocolo XMPP (e o PubSub) é muito maduro e possui bibliotecas disponíveis para todas as grandes linguagens, fazendo como que seu uso seja muito simples na aplicação.
+* Além disso, com o PubSub, a modificação necessária no software, para recebimento dos dados do Asterisk, pode ser efetuada com poucas linhas de código (vide software/software.py).
+* Todos servidores envolvidos podem estar em redes e locais distintos. Para que a solução funcione só é preciso que tanto o servidor de aplicação como o servidor Asterisk possam falar com o servidor XMPP, numa comunicação mínima de troca de mensagens.
+
+Preciso usar o PostgreSQL?
+**************************
+
+Não, você pode utilizar o banco que lhe for mais conveniente. Optei pelo PostgreSQL pois é meu banco de trabalho padrão. Mas atenção: se você for usar outro DBMS (MySQL, Oracle, MSSQL, etc...), precisará alterar os agis e os scripts para conexão no mesmo.
+
+Qual XMPP server eu devo usar?
+******************************
+
+Você pode usar qualquer servidor XMPP que implemente a XEP-0060 (PubSub). Eu escolhi o ejabberd, mas você pode utilizar outro, como por exemplo Openfire, MongooseIM, Tigase e Prosody.
+
+Que tipo de software eu posso integrar com essa solução?
+********************************************************
+
+Você pode integrar qualquer tipo de software que possa fazer uso de informações obtidas através de uma URA. Caso clássicos são softwares de HelpDesk, SAC, CRM e Ouvidoria.

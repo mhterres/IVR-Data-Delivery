@@ -1,0 +1,10 @@
+general
+#######
+* Documentation
+
+queueapp.py
+###########
+* implement more queue strategies (rrmemory) 
+* verify device state when selecting destiny extension of call
+* play sound when queue has no members (hangup after sound?) 
+* internal queue flow

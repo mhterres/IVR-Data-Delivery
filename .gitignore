@@ -1,0 +1,4 @@
+crm/crm.conf
+queue/queueapp.conf
+asterisk/agi-bin/db.conf
+*.pyc

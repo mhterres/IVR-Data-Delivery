@@ -1,0 +1,6 @@
+#include "/etc/asterisk/extensions_poc.conf"
+
+[global]
+
+XMPPDOMAIN_POC=yourJabberDomain
+

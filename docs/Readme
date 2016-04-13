@@ -1,0 +1,67 @@
+Delivering Asterisk IVR data to softwares using XMPP
+****************************************************
+
+Proof of concept
+by Marcelo Hartmann Terres <mhterres@mundoopensource.com.br>
+Version 0.1 - 2016/04/13
+
+The project
+***********
+
+The main goal of this project is to show the integration possibilities between different kind of softwares (customer service softwares, Helpdesk, CRM, etc...) with Asterisk, allowing the interoperability with IVR systems and "other softwares" used in a company.
+
+Softwares
+*********
+
+This project uses the following softwares:
+
+* Asterisk - Asterisk provides the IVR and interacts with a XMPP server using an Stasis app (that uses ARI) that publishes data in a pubsub node. Also, it interacts directly with the XMPP server to announce new calls that enter in queue to all extensions logged on the queue.
+* XMPP server - the XMPP server, besides the IM, is used by Asterisk to announce new calls to queue members. It also works as a middleware between Asterisk and the "other software", that will use the data informed in IVR.
+* The "other software": the "other software" (in this PoC) is simulated by software.py script, that subscribes the pubsub node and processes all items published in the node (in this case, shows customer id and name). From a "real software" point of view, the expected behaviour demands that as soon as the user logon in the application, the software gets its linked extension (defing the pubsub node name too). After, the "real software" must connect in XMPP server (using the same Asterisk account, for example) and subscribes the node, using all items published to take actions.
+* PostgreSQL: PostgreSQL is used to store extensions data (number, name and xmpp account). It is also used to store customer data and to control queue behaviour (queueapp.py).
+
+
+From a custom point of view
+***************************
+
+The customer dials and the IVR answers.
+
+IVR has 3 options: 
+* for support, dial 1
+* for sales, dial 2 - call is redirected to extension 2000
+* please wait (no option) - call is redirected to extension 3000
+
+When customer selects option 1, it will listen a message asking to inform the customer code (4 digits).
+
+
+The dialed code will be validated (agi). If it is invalid, a message will be listened informing the situation.
+
+If the code is valid, Asterisk will verify the extensions logged in support queue. It will send an XMPP message to each member logged, with the customer information.
+
+After that, the call will be handled by Stasis app (queueapp.py). The app will define the destiny extension (using a leastrecent queue policy). Then the customer information will be published in the extension pubsub node (the "other software" will receive the information and should use it for its purposes). Finally, the call will be redirected to the selected extension.
+
+From the queue member point of view
+***********************************
+
+The first thing that the queue member must know is that he/she needs to login and logout in the queue. To login, dial to *56466* (*LOGON*). To logout, dial to *564633*. After a few moments, the operation will be confirmed.
+
+When a new call enters the queue, the logged queue members will receive a XMPP message with the customer information. The call will be redirected to defined member.
+
+If the "other software" was integrated, now it would be the time to open the customer history form, for example.
+
+Using the PoC
+*************
+
+Before use the project, follow the installation steps described in Install doc.
+
+After the installation is complete, you must access the queue directory and run queueapp.py. Leave the script open in foreground. It'll provide some interesting informations.
+
+Do the same with software.py (in software directory).
+
+Let's suppose that you will use the extensions 1000, 2000 and 3000 and that all calls to IVR will be made by extension 2000 (you can change that, but you must edit the queueapp.py script). Let's also suppose that the extensions will be linked, respectivelly with XMPP accounts user1@yourjabberdomain, user2@yourjabberdomain and user3@yourjabberdomain.
+
+The last supposition is that extension 1000 will be logged in the queue.
+
+Now, open your SIP client (extension 1000) and your XMPP client (user1@yourjabberdomain). Also, open another SIP client running extension 2000, where you will make the calls.
+
+Dial to IVR (0000) and select option 1. Enter the customer code (the initial data from database has 2 companies: Company 1 - code 1111 and Company 2 - code 2) and watch the apps messages (queueapp.py, software.py e rasterisk). You will also receive an Asterisk XMPP message with the customer data and your extension (1000) will start to ring.

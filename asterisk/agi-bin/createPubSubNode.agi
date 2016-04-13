@@ -1,0 +1,100 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# createPubSubNode.py
+# Create PubSub Node of extension
+#
+# Marcelo H. Terres <mhterres@mundoopensource.com.br>
+# 2016-04-10
+#
+# Based on pubsub_client.py from sleekXMPP project
+
+import sys
+import sleekxmpp
+import ConfigParser
+
+# Python versions before 3.0 do not use UTF-8 encoding 
+# by default. To ensure that Unicode is handled properly 
+# throughout SleekXMPP, we will set the default encoding 
+# ourselves to UTF-8. 
+if sys.version_info < (3, 0): 
+    from sleekxmpp.util.misc_ops import setdefaultencoding 
+    setdefaultencoding('utf8') 
+else: 
+    raw_input = input 
+
+try:
+
+  extension=sys.argv[1]
+except:
+
+  print "You need to inform extension..."
+  sys.exit(1)
+
+nodeName="extension%s" % extension
+
+configFile='/etc/asterisk/pubsub.conf'
+
+try:
+
+	configuration = ConfigParser.RawConfigParser()
+	configuration.read(configFile)
+
+	xmppDomain=configuration.get('general','xmppdomain')
+	pubsubDomain=configuration.get('general','pubsubdomain')
+	xmppUser="%s/Asterisk" % configuration.get('general','xmppuser')
+	xmppSecret=configuration.get('general','xmppsecret')
+
+except:
+
+	print "Config file %s not found." % configFile
+	sys.exit(1)
+
+
+class PubsubClient(sleekxmpp.ClientXMPP):
+
+    def __init__(self, jid, password, server,
+                       node=None):
+        super(PubsubClient, self).__init__(jid, password)
+
+        self.register_plugin('xep_0060')
+
+        self.action = 'create'
+        self.node = node
+        self.pubsub_server = server
+
+        self.add_event_handler('session_start', self.start, threaded=True)
+
+    def start(self, event):
+        self.get_roster()
+        self.send_presence()
+
+        try:
+            getattr(self, self.action)()
+        except:
+            print('Could not execute: %s' % self.action)
+
+        self.disconnect()
+
+    def create(self):
+        try:
+            self['xep_0060'].create_node(self.pubsub_server, self.node)
+        except:
+            print('Could not create node %s on %s' % (self.node,self.pubsub_server))
+
+# Setup the Pubsub client
+xmpp = PubsubClient(xmppUser, xmppSecret, pubsubDomain, nodeName)
+
+if xmpp.connect():
+	# If you do not have the dnspython library installed, you will need
+	# to manually specify the name of the server if it does not match
+	# the one in the JID. For example, to use Google Talk you would
+	# need to use:
+	#
+	# if xmpp.connect(('talk.google.com', 5222)):
+	#     ...
+	xmpp.process(block=False)
+else:
+	print("Unable to connect.")
+	sys.exit(1)
+
