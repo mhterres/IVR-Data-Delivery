@@ -7,7 +7,8 @@ ringtimeperexten=15
 extension=0000
 
 [xmpp]
-xmppUser=user@yourJabberDomain/queue //same account used on agis scripts (createPubSubNode and deletePubSubNode)
+//same account used on agis scripts (createPubSubNode and deletePubSubNode)
+xmppUser=user@yourJabberDomain/queue
 xmppSecret=secret
 pubsubDomain=yourPubSubDomain
 

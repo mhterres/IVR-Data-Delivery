@@ -22,7 +22,7 @@ cp asterisk/etc/pubsub.conf /etc/asterisk
 cp /var/lib/asterisk/agi-bin/poc/db.conf.sample /var/lib/asterisk/agi-bin/poc/db.conf
 cp software/software.conf.sample software/software.conf
 cp queue/queueapp.conf.sample queue/queueapp.conf
-echo asterisk/etc/extensions.ael.sample >> /etc/asterisk/extensions.ael
+cat asterisk/etc/extensions.ael.sample >> /etc/asterisk/extensions.ael
 
 Adicione ao início do arquivo /etc/asterisk/extensions.conf a seguinte linha:
 
