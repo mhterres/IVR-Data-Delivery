@@ -10,6 +10,7 @@
 #
 # Based on pubsub_events.py
 
+import os
 import sys
 import sleekxmpp
 import ConfigParser
@@ -29,7 +30,7 @@ if sys.version_info < (3, 0):
 else: 
     raw_input = input 
 
-configFile='./software.conf' 
+configFile='%s/software.conf' % os.path.dirname(sys.argv[0])
 
 IDs=[]
 

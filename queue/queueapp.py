@@ -8,6 +8,7 @@
 # 2016-04-11
 #
 
+import os
 import ari
 import sys
 import time
@@ -35,7 +36,7 @@ if sys.version_info < (3, 0):
 else:
     raw_input = input
 
-configFile='./queueapp.conf'
+configFile='%s/queueapp.conf' % os.path.dirname(sys.argv[0])
 
 try:
 
