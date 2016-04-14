@@ -84,10 +84,10 @@ class SW_XMPP(sleekxmpp.ClientXMPP):
         data='''%s''' % msg['pubsub_event']
         tree=ET.fromstring(data)
 
-        # Avoid to display the same item more than once
-        # It started to happens and I don't know why
+        # Avoid display the same item more than once
+        # It started to happens and I don't discover why yet
         # Maybe a XMPP server PubSub implementation bug?
-        # Needs investigation
+        # Needs more investigation (Try Tigase and Prosody PubSub)
         id=tree[0][0].get("id")
 
         if id in IDs:
@@ -99,7 +99,7 @@ class SW_XMPP(sleekxmpp.ClientXMPP):
 
         if idx==0:
 
-           #print "pubsub Item: %s" % data
+            #print "pubsub Item: %s" % data
             print "Code: %s" % tree[0][0][0].text
             try:
                 result = self['xep_0060'].purge(pubsubDomain, nodeName)
