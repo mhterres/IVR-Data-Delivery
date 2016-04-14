@@ -13,15 +13,15 @@ This PoC is divided as follows:
 * agi scripts 
 * IVR (AEL diaplan)
 
-The directories structure of the project contains:
+The directories contains:
 
 * asterisk/agi-bin - agi scripts
 * asterisk/etc - asterisk configuration files and dialplans
 * audios - audio files
-* software - "customer service software"
 * db - database schema and initial daa (pgsql)
 * docs - documentation
-* queue - statis queue application
+* queue - stasis queue application
+* software - "customer service software"
 * tests - scripts for testing
 
 If you find bugs, please send e-mail to bugs@mundoopensource.com.br.
