@@ -1,5 +1,5 @@
 [general]
-xmppUser=user@yourJabberDomain/extennumber
+xmppUser=user@yourJabberDomain/extennumber // Asterisk xmpp user
 xmppSecret=secret
 pubsubDomain=yourPubSubDomain
 nodeName=yourNodeName

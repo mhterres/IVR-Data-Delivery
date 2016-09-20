@@ -13,54 +13,38 @@ import sys
 import sleekxmpp
 import ConfigParser
 
-# Python versions before 3.0 do not use UTF-8 encoding 
-# by default. To ensure that Unicode is handled properly 
-# throughout SleekXMPP, we will set the default encoding 
-# ourselves to UTF-8. 
-if sys.version_info < (3, 0): 
-    from sleekxmpp.util.misc_ops import setdefaultencoding 
-    setdefaultencoding('utf8') 
-else: 
-    raw_input = input 
-
-try:
-
-  extension=sys.argv[1]
-except:
-
-  print "You need to inform extension..."
-  sys.exit(1)
-
-nodeName="extension%s" % extension
-
-configFile='/etc/asterisk/pubsub.conf'
-
-try:
-
-	configuration = ConfigParser.RawConfigParser()
-	configuration.read(configFile)
-
-	xmppDomain=configuration.get('general','xmppdomain')
-	pubsubDomain=configuration.get('general','pubsubdomain')
-	xmppUser="%s/Asterisk" % configuration.get('general','xmppuser')
-	xmppSecret=configuration.get('general','xmppsecret')
-
-except:
-
-	print "Config file %s not found." % configFile
-	sys.exit(1)
-
+# Python versions before 3.0 do not use UTF-8 encoding
+# by default. To ensure that Unicode is handled properly
+# throughout SleekXMPP, we will set the default encoding
+# ourselves to UTF-8.
+if sys.version_info < (3, 0):
+    from sleekxmpp.util.misc_ops import setdefaultencoding
+    setdefaultencoding('utf8')
+else:
+    raw_input = input
 
 class PubsubClient(sleekxmpp.ClientXMPP):
 
     def __init__(self, jid, password, server,
-                       node=None):
+                       node=None, action='list', data=''):
         super(PubsubClient, self).__init__(jid, password)
 
+        print "jid %s." % jid
+        print "password %s." % password
+        print "server %s." % server
+        print "node %s." % node
+
+        self.register_plugin('xep_0030')
+        self.register_plugin('xep_0059')
         self.register_plugin('xep_0060')
 
-        self.action = 'delete'
+        self.actions = ['nodes', 'create', 'delete',
+                        'publish', 'get', 'retract',
+                        'purge', 'subscribe', 'unsubscribe']
+
+        self.action = action
         self.node = node
+        self.data = data
         self.pubsub_server = server
 
         self.add_event_handler('session_start', self.start, threaded=True)
@@ -68,34 +52,79 @@ class PubsubClient(sleekxmpp.ClientXMPP):
     def start(self, event):
         self.get_roster()
         self.send_presence()
-				
+
         try:
             getattr(self, self.action)()
         except:
-            print('Could not execute: %s' % self.action)
-
+            logging.error('Could not execute: %s' % self.action)
         self.disconnect()
+
+    def create(self):
+        try:
+            self['xep_0060'].create_node(self.pubsub_server, self.node)
+        except:
+            logging.error('Could not create node: %s' % self.node)
 
     def delete(self):
         try:
             self['xep_0060'].delete_node(self.pubsub_server, self.node)
-            print('Deleted node %s on %s' % (self.node,self.pubsub_server))
+            print('Deleted node: %s' % self.node)
         except:
-            print('Could not delete node %s on %s' % (self.node,self.pubsub_server))
+            logging.error('Could not delete node: %s' % self.node)
 
-# Setup the Pubsub client
-xmpp = PubsubClient(xmppUser, xmppSecret, pubsubDomain, nodeName)
+if __name__ == '__main__':
 
-if xmpp.connect():
-	# If you do not have the dnspython library installed, you will need
-	# to manually specify the name of the server if it does not match
-	# the one in the JID. For example, to use Google Talk you would
-	# need to use:
-	#
-	# if xmpp.connect(('talk.google.com', 5222)):
-	#     ...
-	xmpp.process(block=False)
-else:
-	print("Unable to connect.")
-	sys.exit(1)
+  try:
 
+    extension=sys.argv[1]
+  except:
+
+    print "You need to inform extension..."
+    sys.exit(1)
+
+  nodeName="extension%s" % extension
+
+  configFile='/etc/asterisk/pubsub.conf'
+
+  try:
+
+    configuration = ConfigParser.RawConfigParser()
+    configuration.read(configFile)
+
+    xmppDomain=configuration.get('general','xmppdomain')
+    pubsubDomain=configuration.get('general','pubsubdomain')
+    #xmppUser="%s/Asterisk" % configuration.get('general','xmppuser')
+    xmppUser="%s" % configuration.get('general','xmppuser')
+    xmppSecret=configuration.get('general','xmppsecret')
+
+  except:
+
+    print "Config file %s not found." % configFile
+    sys.exit(1)
+
+  # Setup the Pubsub client
+  xmpp = PubsubClient(xmppUser, xmppSecret,
+                      server=xmppUser,
+                      node=nodeName,
+                      action="delete",
+                      data='')
+
+  # If you are working with an OpenFire server, you may need
+  # to adjust the SSL version used:
+  # xmpp.ssl_version = ssl.PROTOCOL_SSLv3
+
+  # If you want to verify the SSL certificates offered by a server:
+  # xmpp.ca_certs = "path/to/ca/cert"
+
+  # Connect to the XMPP server and start processing XMPP stanzas.
+  if xmpp.connect():
+    # If you do not have the dnspython library installed, you will need
+    # to manually specify the name of the server if it does not match
+    # the one in the JID. For example, to use Google Talk you would
+    # need to use:
+    #
+    # if xmpp.connect(('talk.google.com', 5222)):
+    #     ...
+    xmpp.process(block=True)
+  else:
+    print("Unable to connect.")

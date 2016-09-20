@@ -7,7 +7,7 @@ ringtimeperexten=15
 extension=0000
 
 [xmpp]
-xmppUser=user@yourJabberDomain/queue
+xmppUser=user@yourJabberDomain/queue // Asterisk xmpp user
 xmppSecret=secret
 pubsubDomain=yourPubSubDomain
 

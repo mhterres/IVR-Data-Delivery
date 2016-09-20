@@ -100,7 +100,7 @@ class SW_XMPP(sleekxmpp.ClientXMPP):
         if idx==0:
 
             #print "pubsub Item: %s" % data
-            print "Code: %s" % tree[0][0][0].text
+            print "Data received: %s" % tree[0][0][0].text
             try:
                 result = self['xep_0060'].purge(pubsubDomain, nodeName)
                 #print('Purged all items from node %s on %s' % (nodeName,pubsubDomain))
